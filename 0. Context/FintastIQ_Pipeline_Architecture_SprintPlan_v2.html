@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FintastIQ — Project Dashboard v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --bg-card: #111827;
+    --bg-card-hover: #1e293b;
+    --border: #1e293b;
+    --border-light: #334155;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --green: #22c55e;
+    --yellow: #facc15;
+    --orange: #fb923c;
+    --red: #ef4444;
+    --bronze: #d4a574;
+    --silver: #a78bfa;
+    --gold: #facc15;
+    --cyan: #22d3ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .logo-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 12px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 32px;
+    background: rgba(10,14,26,0.8);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── COMMON COMPONENTS ── */
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+  .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-progress { background: rgba(96,165,250,0.15); color: var(--blue); }
+  .badge-pending { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+  .badge-blocked { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-llm { background: rgba(244,114,182,0.15); color: var(--pink); }
+  .badge-rule { background: rgba(96,165,250,0.12); color: var(--blue); }
+
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 6px;
+    background: rgba(100,116,139,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* ══════════════════════════════════════════════
+     PAGE 1: ROADMAP
+     ══════════════════════════════════════════════ */
+  .roadmap-phase {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 32px;
+  }
+  .roadmap-phase::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 36px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--border);
+  }
+  .roadmap-phase:last-child::before { display: none; }
+
+  .phase-dot {
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .phase-dot.done { background: var(--green); color: #000; }
+  .phase-dot.current { background: var(--blue); color: #000; animation: pulse 2s infinite; }
+  .phase-dot.future { background: var(--border-light); color: var(--text-muted); }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(96,165,250,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(96,165,250,0); }
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .phase-header h3 {
+    margin: 0;
+    font-size: 17px;
+  }
+  .phase-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 2px 10px;
+    background: rgba(100,116,139,0.1);
+    border-radius: 12px;
+  }
+
+  .phase-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .phase-task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(30,41,59,0.4);
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .phase-task .check {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .check.done { background: var(--green); color: #000; }
+  .check.progress { background: var(--blue); color: #000; }
+  .check.pending { border: 2px solid var(--border-light); }
+
+  .phase-task .task-text { flex: 1; color: var(--text-dim); }
+  .phase-task .task-text.done-text { color: var(--text-muted); text-decoration: line-through; }
+  .phase-task .task-client {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .client-npi { background: rgba(96,165,250,0.12); color: var(--blue); }
+  .client-grav { background: rgba(167,139,250,0.12); color: var(--purple); }
+  .client-3 { background: rgba(244,114,182,0.12); color: var(--pink); }
+  .client-4 { background: rgba(251,146,60,0.12); color: var(--orange); }
+  .client-5 { background: rgba(34,211,238,0.12); color: var(--cyan); }
+  .client-all { background: rgba(250,204,21,0.12); color: var(--yellow); }
+
+  /* ══════════════════════════════════════════════
+     PAGE 2: PIPELINE ARCHITECTURE
+     ══════════════════════════════════════════════ */
+  .medallion-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .medallion-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid;
+  }
+  .medallion-card.bronze { background: rgba(180,130,70,0.06); border-color: rgba(180,130,70,0.2); }
+  .medallion-card.silver { background: rgba(167,139,250,0.06); border-color: rgba(167,139,250,0.2); }
+  .medallion-card.gold { background: rgba(250,204,21,0.06); border-color: rgba(250,204,21,0.2); }
+
+  .medallion-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .bronze .medallion-label { color: var(--bronze); }
+  .silver .medallion-label { color: var(--silver); }
+  .gold .medallion-label { color: var(--gold); }
+
+  .medallion-card h3 { font-size: 16px; margin-bottom: 4px; }
+  .bronze h3 { color: var(--bronze); }
+  .silver h3 { color: var(--silver); }
+  .gold h3 { color: var(--gold); }
+
+  .medallion-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .bronze .tag { background: rgba(180,130,70,0.1); color: var(--bronze); }
+  .silver .tag { background: rgba(167,139,250,0.1); color: var(--silver); }
+  .gold .tag { background: rgba(250,204,21,0.1); color: var(--gold); }
+
+  /* Pipeline stages */
+  .module-section { margin-bottom: 28px; }
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .module-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .m1 .module-num { background: rgba(96,165,250,0.15); color: var(--blue); }
+  .m2 .module-num { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .m3 .module-num { background: rgba(244,114,182,0.15); color: var(--pink); }
+
+  .module-title { font-size: 17px; font-weight: 700; }
+  .m1 .module-title { color: var(--blue); }
+  .m2 .module-title { color: var(--purple); }
+  .m3 .module-title { color: var(--pink); }
+
+  .module-sub { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
+
+  .stages {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .stage-card {
+    flex: 1;
+    min-width: 170px;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid;
+    position: relative;
+  }
+  .m1 .stage-card { background: rgba(96,165,250,0.03); border-color: rgba(96,165,250,0.12); }
+  .m2 .stage-card { background: rgba(167,139,250,0.03); border-color: rgba(167,139,250,0.12); }
+  .m3 .stage-card { background: rgba(244,114,182,0.03); border-color: rgba(244,114,182,0.12); }
+
+  .stage-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 6px;
+  }
+  .m1 .stage-label { color: var(--blue); }
+  .m2 .stage-label { color: var(--purple); }
+  .m3 .stage-label { color: var(--pink); }
+
+  .stage-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .stage-card li {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 2px 0 2px 14px;
+    position: relative;
+    list-style: none;
+    line-height: 1.4;
+  }
+  .stage-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    opacity: 0.4;
+    font-size: 10px;
+  }
+
+  .stage-card:not(:last-child)::after {
+    content: '›';
+    position: absolute;
+    right: -9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: 300;
+    z-index: 1;
+  }
+  .m1 .stage-card::after { color: rgba(96,165,250,0.3); }
+  .m2 .stage-card::after { color: rgba(167,139,250,0.3); }
+  .m3 .stage-card::after { color: rgba(244,114,182,0.3); }
+
+  /* Approval gate */
+  .approval-gate {
+    margin: 20px 0;
+    padding: 18px 24px;
+    border-radius: 10px;
+    background: rgba(251,146,60,0.06);
+    border: 2px dashed rgba(251,146,60,0.25);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .approval-gate .icon { font-size: 28px; }
+  .approval-gate h4 { color: var(--orange); font-size: 14px; font-weight: 700; }
+  .approval-gate p { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-top: 2px; }
+
+  /* ══════════════════════════════════════════════
+     PAGE 3: CLIENT STATUS
+     ══════════════════════════════════════════════ */
+  .client-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .client-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .client-name { font-size: 16px; font-weight: 700; }
+  .client-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .layer-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .layer-chip {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .layer-chip .layer-name {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+  .layer-chip .layer-status { font-size: 12px; font-weight: 600; }
+  .layer-chip .layer-detail { font-size: 11px; margin-top: 2px; }
+
+  .layer-chip.done { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); }
+  .layer-chip.done .layer-name { color: var(--green); }
+  .layer-chip.done .layer-status { color: var(--green); }
+  .layer-chip.done .layer-detail { color: rgba(34,197,94,0.6); }
+
+  .layer-chip.progress { background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.2); }
+  .layer-chip.progress .layer-name { color: var(--blue); }
+  .layer-chip.progress .layer-status { color: var(--blue); }
+  .layer-chip.progress .layer-detail { color: rgba(96,165,250,0.6); }
+
+  .layer-chip.pending { background: rgba(100,116,139,0.06); border: 1px solid rgba(100,116,139,0.15); }
+  .layer-chip.pending .layer-name { color: var(--text-muted); }
+  .layer-chip.pending .layer-status { color: var(--text-muted); }
+  .layer-chip.pending .layer-detail { color: var(--text-muted); }
+
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .stat {
+    text-align: center;
+    flex: 1;
+  }
+  .stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ══════════════════════════════════════════════
+     PAGE 4: 20 ANALYSES
+     ══════════════════════════════════════════════ */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .analysis-item {
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .analysis-item:hover { border-color: var(--border-light); }
+  .analysis-num {
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .analysis-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .analysis-fields {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .analysis-readiness {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .readiness-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .readiness-dot.ready { background: var(--green); }
+  .readiness-dot.partial { background: var(--yellow); }
+  .readiness-dot.blocked { background: var(--red); }
+  .readiness-text { font-size: 10px; font-weight: 500; }
+
+  /* ══════════════════════════════════════════════
+     PAGE 5: ISSUES LOG
+     ══════════════════════════════════════════════ */
+  .issue-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .issue-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .issue-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .issue-table tr:hover td { background: rgba(30,41,59,0.3); }
+  .severity-high { color: var(--red); }
+  .severity-med { color: var(--orange); }
+  .severity-low { color: var(--yellow); }
+
+  /* ══════════════════════════════════════════════
+     PAGE 6: TECH STACK
+     ══════════════════════════════════════════════ */
+  .stack-layer {
+    margin-bottom: 20px;
+  }
+  .stack-layer h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .stack-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack-chip {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    background: rgba(30,41,59,0.5);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  /* ══════════════════════════════════════════════
+     PAGE 7: SYSTEM ARCHITECTURE
+     ══════════════════════════════════════════════ */
+  .arch-canvas {
+    position: relative;
+    padding: 24px 0;
+  }
+
+  .arch-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 12px;
+    align-items: stretch;
+  }
+  .arch-row.centered { justify-content: center; }
+
+  .arch-box {
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid;
+    position: relative;
+    min-width: 160px;
+  }
+  .arch-box.wide { flex: 1; }
+  .arch-box.compact { padding: 14px 18px; }
+
+  .arch-box .box-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .arch-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .arch-box .box-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .arch-box .box-detail {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(100,116,139,0.15);
+    line-height: 1.5;
+  }
+  .arch-box .box-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .arch-box .box-item {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+
+  /* Color themes for boxes */
+  .arch-box.blue { background: rgba(96,165,250,0.05); border-color: rgba(96,165,250,0.2); }
+  .arch-box.blue .box-label { color: var(--blue); }
+  .arch-box.blue h4 { color: var(--blue); }
+  .arch-box.blue .box-item { background: rgba(96,165,250,0.1); color: var(--blue); }
+
+  .arch-box.purple { background: rgba(167,139,250,0.05); border-color: rgba(167,139,250,0.2); }
+  .arch-box.purple .box-label { color: var(--purple); }
+  .arch-box.purple h4 { color: var(--purple); }
+  .arch-box.purple .box-item { background: rgba(167,139,250,0.1); color: var(--purple); }
+
+  .arch-box.green { background: rgba(34,197,94,0.05); border-color: rgba(34,197,94,0.2); }
+  .arch-box.green .box-label { color: var(--green); }
+  .arch-box.green h4 { color: var(--green); }
+  .arch-box.green .box-item { background: rgba(34,197,94,0.1); color: var(--green); }
+
+  .arch-box.pink { background: rgba(244,114,182,0.05); border-color: rgba(244,114,182,0.2); }
+  .arch-box.pink .box-label { color: var(--pink); }
+  .arch-box.pink h4 { color: var(--pink); }
+  .arch-box.pink .box-item { background: rgba(244,114,182,0.1); color: var(--pink); }
+
+  .arch-box.orange { background: rgba(251,146,60,0.05); border-color: rgba(251,146,60,0.2); }
+  .arch-box.orange .box-label { color: var(--orange); }
+  .arch-box.orange h4 { color: var(--orange); }
+  .arch-box.orange .box-item { background: rgba(251,146,60,0.1); color: var(--orange); }
+
+  .arch-box.cyan { background: rgba(34,211,238,0.05); border-color: rgba(34,211,238,0.2); }
+  .arch-box.cyan .box-label { color: var(--cyan); }
+  .arch-box.cyan h4 { color: var(--cyan); }
+  .arch-box.cyan .box-item { background: rgba(34,211,238,0.1); color: var(--cyan); }
+
+  .arch-box.dark { background: rgba(30,41,59,0.4); border-color: var(--border); }
+  .arch-box.dark .box-label { color: var(--text-muted); }
+  .arch-box.dark h4 { color: var(--text-dim); }
+  .arch-box.dark .box-item { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+
+  .arch-box.gold-b { background: rgba(250,204,21,0.05); border-color: rgba(250,204,21,0.2); }
+  .arch-box.gold-b .box-label { color: var(--yellow); }
+  .arch-box.gold-b h4 { color: var(--yellow); }
+  .arch-box.gold-b .box-item { background: rgba(250,204,21,0.1); color: var(--yellow); }
+
+  /* Status indicator on boxes */
+  .box-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .box-status.live { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+  .box-status.wip { background: var(--blue); box-shadow: 0 0 6px rgba(96,165,250,0.5); animation: pulse 2s infinite; }
+  .box-status.planned { background: var(--text-muted); }
+
+  /* Connector arrows */
+  .arch-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: -4px 0;
+    position: relative;
+    z-index: 2;
+  }
+  .arch-arrow .arrow-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 20px;
+  }
+  .arrow-head {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+  }
+  .arrow-label {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin: 2px 0;
+    white-space: nowrap;
+  }
+
+  .arch-arrow.blue .arrow-line { background: rgba(96,165,250,0.3); }
+  .arch-arrow.blue .arrow-head { border-top: 6px solid rgba(96,165,250,0.4); }
+  .arch-arrow.blue .arrow-label { background: rgba(96,165,250,0.1); color: var(--blue); }
+
+  .arch-arrow.green .arrow-line { background: rgba(34,197,94,0.3); }
+  .arch-arrow.green .arrow-head { border-top: 6px solid rgba(34,197,94,0.4); }
+  .arch-arrow.green .arrow-label { background: rgba(34,197,94,0.1); color: var(--green); }
+
+  .arch-arrow.purple .arrow-line { background: rgba(167,139,250,0.3); }
+  .arch-arrow.purple .arrow-head { border-top: 6px solid rgba(167,139,250,0.4); }
+  .arch-arrow.purple .arrow-label { background: rgba(167,139,250,0.1); color: var(--purple); }
+
+  .arch-arrow.orange .arrow-line { background: rgba(251,146,60,0.3); }
+  .arch-arrow.orange .arrow-head { border-top: 6px solid rgba(251,146,60,0.4); }
+  .arch-arrow.orange .arrow-label { background: rgba(251,146,60,0.1); color: var(--orange); }
+
+  .arch-arrow.pink .arrow-line { background: rgba(244,114,182,0.3); }
+  .arch-arrow.pink .arrow-head { border-top: 6px solid rgba(244,114,182,0.4); }
+  .arch-arrow.pink .arrow-label { background: rgba(244,114,182,0.1); color: var(--pink); }
+
+  /* Horizontal connector */
+  .arch-hconnect {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 -4px;
+  }
+  .hline { height: 2px; flex: 1; }
+  .hline.blue { background: rgba(96,165,250,0.2); }
+  .hline.purple { background: rgba(167,139,250,0.2); }
+
+  /* Section dividers in arch */
+  .arch-section {
+    margin: 28px 0 16px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .arch-section::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+  }
+  .arch-section.blue-s { color: var(--blue); background: rgba(96,165,250,0.05); }
+  .arch-section.blue-s::after { background: rgba(96,165,250,0.15); }
+  .arch-section.purple-s { color: var(--purple); background: rgba(167,139,250,0.05); }
+  .arch-section.purple-s::after { background: rgba(167,139,250,0.15); }
+  .arch-section.green-s { color: var(--green); background: rgba(34,197,94,0.05); }
+  .arch-section.green-s::after { background: rgba(34,197,94,0.15); }
+  .arch-section.pink-s { color: var(--pink); background: rgba(244,114,182,0.05); }
+  .arch-section.pink-s::after { background: rgba(244,114,182,0.15); }
+
+  /* Legend */
+  .arch-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(30,41,59,0.3);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .medallion-row { flex-direction: column; }
+    .stages { flex-direction: column; }
+    .analysis-grid { grid-template-columns: repeat(2, 1fr); }
+    .content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ TOP BAR ════════════ -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;">
+    <span class="logo">FintastIQ</span>
+    <span class="logo-sub">Pricing Diagnostic Platform — Project Dashboard</span>
+  </div>
+  <span style="font-size:12px;color:var(--text-muted);">Updated Mar 2026</span>
+</div>
+
+<!-- ════════════ TABS ════════════ -->
+<div class="tabs" id="tabBar">
+  <div class="tab active" data-tab="roadmap">Roadmap</div>
+  <div class="tab" data-tab="architecture">Pipeline Architecture</div>
+  <div class="tab" data-tab="clients">Client Status</div>
+  <div class="tab" data-tab="analyses">20 Analyses</div>
+  <div class="tab" data-tab="issues">Issues & Decisions</div>
+  <div class="tab" data-tab="stack">Tech Stack</div>
+  <div class="tab" data-tab="context">Client Context Intake</div>
+  <div class="tab" data-tab="system">System Architecture</div>
+</div>
+
+<div class="content">
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 1: ROADMAP                                             ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page active" id="page-roadmap">
+  <h1>Project Roadmap</h1>
+  <p class="subtitle">From raw client folders to production-ready pricing diagnostics</p>
+
+  <!-- Phase 1 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot done">✓</div>
+    <div class="phase-header">
+      <h3>Phase 1 — Foundation & Proof of Concept</h3>
+      <span class="phase-time">Completed</span>
+      <span class="badge badge-done">Done</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Define canonical data schema (14 tables, 140+ fields)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build rule-based ETL for NPI single file (1,307 txns, $15.69M)</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build rule-based ETL for Gravitate ARR (7,015 txns, $153.7M)</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build rule-based ETL for Gravitate Strategy Workspace</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Design Supabase schema + SQL generation script</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot done">✓</div>
+    <div class="phase-header">
+      <h3>Phase 2 — LLM-Powered Universal Pipeline</h3>
+      <span class="phase-time">Completed</span>
+      <span class="badge badge-done">Done</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build LLM pipeline v1 (single-file, Gravitate ARR + Strategy)</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Compare LLM vs rule-based outputs (Pipeline Comparison Report)</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build folder-level LLM pipeline — process entire NPI data folder</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">NPI Bronze output: 75,163 records, 4 canonical tables, Grade C (72/100)</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Organize all outputs into medallion folder structure</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Design pipeline architecture (Ingestion → Cleaning → Validation)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot current">3</div>
+    <div class="phase-header">
+      <h3>Phase 3 — Cleaning Module & Silver Layer</h3>
+      <span class="phase-time">Current</span>
+      <span class="badge badge-progress">In Progress</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Build LLM-powered Cleaning Module (Bronze → Silver) — 4-stage pipeline</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Date fixing — 548 Excel serial dates recovered from source via positional matching</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Entity resolution — 37,705 → 14,064 customers, 241 name variants merged via LLM</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Imputation — region/segment/tier via LLM + revenue-bracket rules</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Revenue sign handling — 18 txn + 2,582 monthly flagged as credit/refund/adjustment</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Reconciliation report — raw vs cleaned deltas, change log, client questions</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">Built sales_rep_dim (59 reps) — derived from scattered data across tables</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check done">✓</div>
+        <span class="task-text done-text">NPI Silver output: 5 tables, 34,571 records, $119M txn + $105M monthly revenue</span>
+        <span class="task-client client-npi">NPI</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Design Client Context Intake system (3-tier hybrid approach)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Run Gravitate folder through universal pipeline (Bronze)</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Clean Gravitate data through Cleaning Module (Silver)</span>
+        <span class="task-client client-grav">Gravitate</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Merge universal pipeline into single production script</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot future">4</div>
+    <div class="phase-header">
+      <h3>Phase 4 — Stress-Test with New Clients</h3>
+      <span class="phase-time">Next</span>
+      <span class="badge badge-pending">Pending</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Run Client 3 folder cold — discover new edge cases</span>
+        <span class="task-client client-3">Client 3</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Fix pipeline for Client 3's unique data structures</span>
+        <span class="task-client client-3">Client 3</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Run Client 4 + Client 5 — expect mostly working with minor fixes</span>
+        <span class="task-client client-4">Client 4</span>
+        <span class="task-client client-5">Client 5</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build pattern library from all 5 clients' edge cases</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Refactor pipeline into production-grade universal script</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot future">5</div>
+    <div class="phase-header">
+      <h3>Phase 5 — Gold Layer & Client Approval</h3>
+      <span class="phase-time">Future</span>
+      <span class="badge badge-pending">Pending</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build Validation Module (Silver → Gold)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Auto-generate client approval summary (assumptions, figures, questions)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Derived metrics computation (discount %, margin, cohorts)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Analysis readiness scorecard — which of 20 analyses can run</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Load Gold tables to Supabase with RLS policies</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 6 -->
+  <div class="roadmap-phase">
+    <div class="phase-dot future">6</div>
+    <div class="phase-header">
+      <h3>Phase 6 — Two-Frontend Architecture & Analysis Engine</h3>
+      <span class="phase-time">Future</span>
+      <span class="badge badge-pending">Pending</span>
+    </div>
+    <div class="phase-tasks">
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build Internal Console (Frontend A) — data upload, context intake, pipeline management</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build Client Context Intake flow — 3-tier hybrid (structured + LLM follow-ups + open)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Context extraction from uploaded decks/docs (PPT → client_context.json via LLM)</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build 20 analysis computation modules against Gold tables</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Build Client Insights Portal (Frontend B) — analyses, charts, approval UI, reports</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+      <div class="phase-task">
+        <div class="check pending"></div>
+        <span class="task-text">Deploy both frontends to Vercel + Supabase production</span>
+        <span class="task-client client-all">All Clients</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 2: PIPELINE ARCHITECTURE                               ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-architecture">
+  <h1>Pipeline Architecture</h1>
+  <p class="subtitle">Medallion pattern — Bronze (raw) → Silver (clean) → Gold (analysis-ready)</p>
+
+  <!-- Client Context Intake — Pre-Pipeline -->
+  <div class="card" style="border-color:rgba(34,211,238,0.2);background:rgba(34,211,238,0.03);margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="width:32px;height:32px;border-radius:8px;background:rgba(34,211,238,0.15);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">0</div>
+      <span style="font-size:17px;font-weight:700;color:var(--cyan);">Client Context Intake</span>
+      <span style="font-size:12px;color:var(--text-muted);margin-left:4px;">→ Pre-Pipeline</span>
+      <span class="badge badge-pending" style="margin-left:8px">Designed</span>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Before any data processing begins, capture client context via a 3-tier hybrid approach. Context stored as <code class="mono" style="color:var(--cyan);">client_context.json</code> — injected into every pipeline stage for smarter classification, mapping, and validation.</p>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;padding:12px;border-radius:8px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.1);">
+        <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;">Tier 1 — Required</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;">Company name, industry, business model (B2B/B2C), revenue range, product/service type, engagement goal</div>
+      </div>
+      <div style="flex:1;padding:12px;border-radius:8px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.1);">
+        <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;">Tier 2 — LLM Follow-ups</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;">3–5 dynamic questions generated from Tier 1 answers. SaaS → renewal cycles; Manufacturing → SKU count, channels</div>
+      </div>
+      <div style="flex:1;padding:12px;border-radius:8px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.1);">
+        <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;">Tier 3 — Open Context</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;">Prompted free text: pricing structure, known issues, data quirks. Or upload proposal deck for LLM extraction</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.5;">
+      <span style="color:var(--cyan);font-weight:600;">Input paths:</span> Client self-serves via portal <span style="color:var(--border-light)">|</span> FintastIQ team fills from proposal deck/kickoff notes <span style="color:var(--border-light)">|</span> LLM extracts from uploaded .pptx/.docx
+    </div>
+  </div>
+
+  <!-- Medallion Cards -->
+  <div class="medallion-row">
+    <div class="medallion-card bronze">
+      <div class="medallion-label">🥉 Bronze — Raw Extracted</div>
+      <h3>Ingestion Module</h3>
+      <p class="medallion-desc">Data as extracted from client files. Schema-mapped but no cleaning. Full traceability to source cell and sheet.</p>
+      <div class="tag-list">
+        <span class="tag">transaction_fact</span>
+        <span class="tag">customer_dim</span>
+        <span class="tag">product_dim</span>
+        <span class="tag">sales_rep_dim</span>
+        <span class="tag">contract</span>
+        <span class="tag">deal_opportunity</span>
+        <span class="tag">monthly_financials</span>
+      </div>
+    </div>
+    <div class="medallion-card silver">
+      <div class="medallion-label">🥈 Silver — Cleaned</div>
+      <h3>Cleaning Module</h3>
+      <p class="medallion-desc">Dates fixed, entities deduplicated, nulls imputed, anomalies flagged. Every change logged for reconciliation.</p>
+      <div class="tag-list">
+        <span class="tag">transaction_fact</span>
+        <span class="tag">customer_dim</span>
+        <span class="tag">product_dim</span>
+        <span class="tag">sales_rep_dim</span>
+        <span class="tag">deal_opportunity</span>
+        <span class="tag">cleaning_log</span>
+        <span class="tag">reconciliation</span>
+      </div>
+    </div>
+    <div class="medallion-card gold">
+      <div class="medallion-label">🥇 Gold — Analysis-Ready</div>
+      <h3>Validation Module</h3>
+      <p class="medallion-desc">Client-approved figures. Derived metrics. Ready for the 20 analyses and Supabase load.</p>
+      <div class="tag-list">
+        <span class="tag">transaction_fact</span>
+        <span class="tag">customer_dim</span>
+        <span class="tag">pricing_metrics</span>
+        <span class="tag">analysis_inputs</span>
+        <span class="tag">approval_record</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 1 -->
+  <div class="module-section m1">
+    <div class="module-header">
+      <div class="module-num">1</div>
+      <span class="module-title">Ingestion Module</span>
+      <span class="module-sub">→ Bronze Layer</span>
+      <span class="badge badge-done" style="margin-left:8px">Built</span>
+    </div>
+    <div class="stages">
+      <div class="stage-card">
+        <div class="stage-label">Stage 1</div>
+        <h4>Discover & Profile</h4>
+        <ul>
+          <li>Recursive folder scan</li>
+          <li>.xlsx, .xlsb, .csv detect</li>
+          <li>Per-sheet column profiling</li>
+          <li>Data type & sample extraction</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 2</div>
+        <h4>LLM Classify</h4>
+        <ul>
+          <li>Single API call, all sheets</li>
+          <li>EXTRACT / CONTEXT / SKIP</li>
+          <li>Target table assignment</li>
+          <li>Mapping hints</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 3</div>
+        <h4>LLM Map</h4>
+        <ul>
+          <li>Per-sheet column mapping</li>
+          <li>Wide vs long detection</li>
+          <li>Date column identification</li>
+          <li>Canonical field alignment</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 4</div>
+        <h4>Transform</h4>
+        <ul>
+          <li>Wide → long unpivot</li>
+          <li>ID generation</li>
+          <li>Schema enforcement</li>
+          <li>Source file tagging</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 5</div>
+        <h4>LLM Validate</h4>
+        <ul>
+          <li>Quality grade (A–F)</li>
+          <li>Anomaly detection</li>
+          <li>Coverage assessment</li>
+          <li>Issue flagging</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 2 -->
+  <div class="module-section m2">
+    <div class="module-header">
+      <div class="module-num">2</div>
+      <span class="module-title">Cleaning Module</span>
+      <span class="module-sub">→ Silver Layer</span>
+      <span class="badge badge-done" style="margin-left:8px">Built</span>
+    </div>
+    <div class="stages">
+      <div class="stage-card">
+        <div class="stage-label">Stage 1</div>
+        <h4>Type & Date Fixes</h4>
+        <ul>
+          <li>Excel serial → datetime</li>
+          <li>Numeric coercion</li>
+          <li>Placeholder cleanup (0x2a)</li>
+          <li>Encoding normalization</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 2</div>
+        <h4>Entity Resolution</h4>
+        <ul>
+          <li>Customer deduplication</li>
+          <li>Fuzzy name matching</li>
+          <li>Master record creation</li>
+          <li>Cross-table linking</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 3</div>
+        <h4>Imputation</h4>
+        <ul>
+          <li>Missing field inference</li>
+          <li>Region/segment derivation</li>
+          <li>Revenue sign correction</li>
+          <li>Outlier detection</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 4</div>
+        <h4>Reconciliation</h4>
+        <ul>
+          <li>Raw → cleaned delta report</li>
+          <li>Record count tracking</li>
+          <li>Revenue reconciliation</li>
+          <li>Change log generation</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Gate -->
+  <div class="approval-gate">
+    <div class="icon">🤝</div>
+    <div>
+      <h4>Client Approval Checkpoint</h4>
+      <p>Auto-generated summary: key figures, assumptions made, open questions, reconciliation of raw vs cleaned data. Client reviews and confirms before Gold layer processing begins.</p>
+    </div>
+  </div>
+
+  <!-- Module 3 -->
+  <div class="module-section m3">
+    <div class="module-header">
+      <div class="module-num">3</div>
+      <span class="module-title">Validation & Gold Module</span>
+      <span class="module-sub">→ Gold Layer</span>
+      <span class="badge badge-pending" style="margin-left:8px">Planned</span>
+    </div>
+    <div class="stages">
+      <div class="stage-card">
+        <div class="stage-label">Stage 1</div>
+        <h4>Apply Feedback</h4>
+        <ul>
+          <li>Client corrections</li>
+          <li>Confirm assumptions</li>
+          <li>Resolve open questions</li>
+          <li>Lock approved figures</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 2</div>
+        <h4>Derived Metrics</h4>
+        <ul>
+          <li>Discount % calculation</li>
+          <li>Price variance metrics</li>
+          <li>Margin computation</li>
+          <li>Cohort assignment</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 3</div>
+        <h4>Readiness Check</h4>
+        <ul>
+          <li>Per-analysis data check</li>
+          <li>Missing field alerts</li>
+          <li>Coverage scorecard</li>
+          <li>20/20 readiness report</li>
+        </ul>
+        <span class="badge badge-llm" style="margin-top:8px">Claude Sonnet</span>
+      </div>
+      <div class="stage-card">
+        <div class="stage-label">Stage 4</div>
+        <h4>Load to Supabase</h4>
+        <ul>
+          <li>Schema DDL generation</li>
+          <li>Bulk insert</li>
+          <li>RLS policies</li>
+          <li>API provisioning</li>
+        </ul>
+        <span class="badge badge-rule" style="margin-top:8px">Rule-Based</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 3: CLIENT STATUS                                       ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-clients">
+  <h1>Client Data Status</h1>
+  <p class="subtitle">Pipeline progress across all client datasets</p>
+
+  <!-- NPI -->
+  <div class="client-card">
+    <div class="client-header">
+      <div>
+        <div class="client-name" style="color:var(--blue)">NPI</div>
+        <div class="client-meta">14 files &bull; 86 sheets &bull; 5 subfolders &bull; includes .xlsb binary files</div>
+      </div>
+      <span class="badge badge-done">Silver Complete → Gold Next</span>
+    </div>
+    <div class="layer-row">
+      <div class="layer-chip done">
+        <div class="layer-name">Bronze</div>
+        <div class="layer-status">Complete</div>
+        <div class="layer-detail">75,163 records • Grade C</div>
+      </div>
+      <div class="layer-chip done">
+        <div class="layer-name">Silver</div>
+        <div class="layer-status">Complete</div>
+        <div class="layer-detail">34,571 records • 5 tables • dates fixed</div>
+      </div>
+      <div class="layer-chip pending">
+        <div class="layer-name">Gold</div>
+        <div class="layer-status">Pending</div>
+        <div class="layer-detail">Needs client approval</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" style="color:var(--blue)">5,494</div><div class="stat-label">Transactions</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--green)">$119M</div><div class="stat-label">Revenue</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--purple)">14,064</div><div class="stat-label">Customers (deduped)</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--orange)">2,444</div><div class="stat-label">Deals (deduped)</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--yellow)">59</div><div class="stat-label">Sales Reps</div></div>
+    </div>
+  </div>
+
+  <!-- Gravitate -->
+  <div class="client-card">
+    <div class="client-header">
+      <div>
+        <div class="client-name" style="color:var(--purple)">Gravitate</div>
+        <div class="client-meta">2 primary files &bull; ARR workbook + Strategy workspace &bull; SaaS client data</div>
+      </div>
+      <span class="badge badge-progress">Partial Bronze → Needs Folder Run</span>
+    </div>
+    <div class="layer-row">
+      <div class="layer-chip progress">
+        <div class="layer-name">Bronze</div>
+        <div class="layer-status">Partial</div>
+        <div class="layer-detail">Individual files done, folder run pending</div>
+      </div>
+      <div class="layer-chip pending">
+        <div class="layer-name">Silver</div>
+        <div class="layer-status">Pending</div>
+        <div class="layer-detail">Revenue reconciliation needed</div>
+      </div>
+      <div class="layer-chip pending">
+        <div class="layer-name">Gold</div>
+        <div class="layer-status">Pending</div>
+        <div class="layer-detail">—</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" style="color:var(--purple)">~2,500</div><div class="stat-label">LLM Transactions</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--green)">~$6M</div><div class="stat-label">Expected ARR</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--orange)">7,015</div><div class="stat-label">Rule-Based Txns</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--yellow)">218</div><div class="stat-label">Deals</div></div>
+    </div>
+  </div>
+
+  <!-- Client 3, 4, 5 -->
+  <div class="client-card" style="opacity:0.6">
+    <div class="client-header">
+      <div>
+        <div class="client-name" style="color:var(--pink)">Client 3</div>
+        <div class="client-meta">Not yet profiled — will be the first cold stress-test of the universal pipeline</div>
+      </div>
+      <span class="badge badge-pending">Not Started</span>
+    </div>
+    <div class="layer-row">
+      <div class="layer-chip pending"><div class="layer-name">Bronze</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Silver</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Gold</div><div class="layer-status">—</div></div>
+    </div>
+  </div>
+
+  <div class="client-card" style="opacity:0.5">
+    <div class="client-header">
+      <div>
+        <div class="client-name" style="color:var(--orange)">Client 4</div>
+        <div class="client-meta">Not yet profiled</div>
+      </div>
+      <span class="badge badge-pending">Not Started</span>
+    </div>
+    <div class="layer-row">
+      <div class="layer-chip pending"><div class="layer-name">Bronze</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Silver</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Gold</div><div class="layer-status">—</div></div>
+    </div>
+  </div>
+
+  <div class="client-card" style="opacity:0.4">
+    <div class="client-header">
+      <div>
+        <div class="client-name" style="color:var(--cyan)">Client 5</div>
+        <div class="client-meta">Not yet profiled</div>
+      </div>
+      <span class="badge badge-pending">Not Started</span>
+    </div>
+    <div class="layer-row">
+      <div class="layer-chip pending"><div class="layer-name">Bronze</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Silver</div><div class="layer-status">—</div></div>
+      <div class="layer-chip pending"><div class="layer-name">Gold</div><div class="layer-status">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 4: 20 ANALYSES                                        ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-analyses">
+  <h1>20 Standard Pricing Analyses</h1>
+  <p class="subtitle">Each analysis requires specific Gold-layer fields. Readiness based on current NPI data.</p>
+
+  <div class="analysis-grid">
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">01</div>
+      <div class="analysis-name">Pocket Price Waterfall</div>
+      <div class="analysis-fields">list_price, discount_pct, net_price, rebates</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — missing list_price & discount</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">02</div>
+      <div class="analysis-name">Price Band Analysis</div>
+      <div class="analysis-fields">unit_price, customer_segment, product</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — unit_price 20% filled</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">03</div>
+      <div class="analysis-name">PVM Decomposition</div>
+      <div class="analysis-fields">price, volume, mix, time periods</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — needs clean time series</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">04</div>
+      <div class="analysis-name">Customer Profitability</div>
+      <div class="analysis-fields">revenue, cost, margin by customer</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — no cost data</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">05</div>
+      <div class="analysis-name">Win/Loss Analysis</div>
+      <div class="analysis-fields">deal_stage, close_date, amount, reason</div>
+      <div class="analysis-readiness"><div class="readiness-dot ready"></div><span class="readiness-text" style="color:var(--green)">Ready — 19K deals with stages</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">06</div>
+      <div class="analysis-name">Price Elasticity</div>
+      <div class="analysis-fields">price_change, quantity_impact, time</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — missing quantity data</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">07</div>
+      <div class="analysis-name">Discount Governance</div>
+      <div class="analysis-fields">discount_pct, approval_level, policy</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — no discount data</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">08</div>
+      <div class="analysis-name">Contract Leakage</div>
+      <div class="analysis-fields">contract_value, actual_billed, delta</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — no contract table</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">09</div>
+      <div class="analysis-name">Revenue Mix</div>
+      <div class="analysis-fields">revenue, product_type, segment</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — service_type available</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">10</div>
+      <div class="analysis-name">Churn Analysis</div>
+      <div class="analysis-fields">churn_status, tenure, revenue</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — churn_status 1% filled</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">11</div>
+      <div class="analysis-name">Cohort Revenue</div>
+      <div class="analysis-fields">start_date, monthly_revenue</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — needs date fixes first</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">12</div>
+      <div class="analysis-name">Sales Rep Performance</div>
+      <div class="analysis-fields">rep, quota, bookings, win_rate</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — no quota data</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">13</div>
+      <div class="analysis-name">Deal Velocity</div>
+      <div class="analysis-fields">stage_dates, cycle_time, amount</div>
+      <div class="analysis-readiness"><div class="readiness-dot ready"></div><span class="readiness-text" style="color:var(--green)">Ready — opp history has stage dates</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">14</div>
+      <div class="analysis-name">Competitive Pricing</div>
+      <div class="analysis-fields">competitor_data, win_reason</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — no competitor data</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">15</div>
+      <div class="analysis-name">Customer Segmentation</div>
+      <div class="analysis-fields">revenue, industry, size, tier</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — industry 97%, tier 43%</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">16</div>
+      <div class="analysis-name">Revenue Optimization</div>
+      <div class="analysis-fields">pricing_levers, uplift_potential</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — needs derived metrics</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">17</div>
+      <div class="analysis-name">Deal Size Distribution</div>
+      <div class="analysis-fields">deal_amount, bucket, segment</div>
+      <div class="analysis-readiness"><div class="readiness-dot ready"></div><span class="readiness-text" style="color:var(--green)">Ready — deal amounts available</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">18</div>
+      <div class="analysis-name">Pipeline Coverage</div>
+      <div class="analysis-fields">pipeline_value, quota, stage</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — pipeline yes, quota no</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">19</div>
+      <div class="analysis-name">Renewal Analysis</div>
+      <div class="analysis-fields">contract_dates, renewal_rate</div>
+      <div class="analysis-readiness"><div class="readiness-dot blocked"></div><span class="readiness-text" style="color:var(--red)">Blocked — no contract table</span></div>
+    </div>
+    <div class="analysis-item">
+      <div class="analysis-num" style="color:var(--green)">20</div>
+      <div class="analysis-name">Geographic Pricing</div>
+      <div class="analysis-fields">region, revenue, price_variance</div>
+      <div class="analysis-readiness"><div class="readiness-dot partial"></div><span class="readiness-text" style="color:var(--yellow)">Partial — region 30% filled</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <h3 style="color:var(--text-dim);font-size:14px;margin-bottom:12px;">Readiness Summary (NPI Bronze Data)</h3>
+    <div style="display:flex;gap:24px;">
+      <div><span style="color:var(--green);font-weight:700;font-size:24px;">3</span><span style="color:var(--text-muted);font-size:13px;margin-left:6px;">Ready</span></div>
+      <div><span style="color:var(--yellow);font-weight:700;font-size:24px;">11</span><span style="color:var(--text-muted);font-size:13px;margin-left:6px;">Partial</span></div>
+      <div><span style="color:var(--red);font-weight:700;font-size:24px;">6</span><span style="color:var(--text-muted);font-size:13px;margin-left:6px;">Blocked</span></div>
+    </div>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:10px;line-height:1.5;">After Silver cleaning (date fixes, dedup, imputation), expect ~8 analyses to become Ready. Blocked analyses primarily need data fields that may not exist in NPI's source files — these become client questions.</p>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 5: ISSUES & DECISIONS                                  ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-issues">
+  <h1>Issues & Decisions Log</h1>
+  <p class="subtitle">Tracked issues from pipeline runs — prioritized by impact on analyses</p>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="issue-table">
+      <thead>
+        <tr>
+          <th style="width:30px">#</th>
+          <th>Issue</th>
+          <th>Client</th>
+          <th>Impact</th>
+          <th>Fix</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>548 rows with 1970 timestamps (Excel serial dates)</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-high">High</td>
+          <td>Positional matching from source .xlsb — all 548 recovered</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>37,705 customer rows with ~14K unique — massive duplication</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-high">High</td>
+          <td>LLM entity resolution: 241 variants merged → 14,064 unique</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Region 30%, tier 43%, segment 21% fill rates</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>LLM imputation applied — remaining nulls lack source data</td>
+          <td><span class="badge badge-done">Improved</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>0x2a placeholder values in customer fields</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-low">Low</td>
+          <td>Replace with null — 88 cleaned, check residuals</td>
+          <td><span class="badge badge-done">Cleaned</span></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Revenue gap: txn_fact $119M vs monthly_fin $105M</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-high">High</td>
+          <td>Reconciliation report + client confirmation</td>
+          <td><span class="badge badge-blocked">Client Q</span></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>No product_dim table extracted</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>Harmonize from Pricing Bundle + service_type field</td>
+          <td><span class="badge badge-pending">Silver fix</span></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>Month columns leaked into transaction_fact</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-low">Low</td>
+          <td>Removed in post-processing</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>18 negative revenue in txn_fact, 2,582 in monthly_fin</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>Flagged as credit_or_refund / expense_or_adjustment</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>LLM ARR: 2,546 txns/$36.6M vs rule-based 7,015/$153.7M</td>
+          <td><span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple)">Gravitate</span></td>
+          <td class="severity-high">High</td>
+          <td>Expected ~$6M ARR — confirm with client</td>
+          <td><span class="badge badge-blocked">Client Q</span></td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>Strategy workspace $137M vs $6.7M overcounting</td>
+          <td><span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple)">Gravitate</span></td>
+          <td class="severity-high">High</td>
+          <td>Double-counting aggregate rows — need dedup</td>
+          <td><span class="badge badge-pending">Silver fix</span></td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td>No sales_rep_dim for NPI — data scattered</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>Built sales_rep_dim: 59 reps from txn_fact + deal_opp</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td>Duplicate deals — Current Opps + Opp History overlap</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>Deduped: 19,454 → 2,444 keeping most recent per opp</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td>No contract dimension table</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-med">Medium</td>
+          <td>May not exist in source data — client question</td>
+          <td><span class="badge badge-blocked">Client Q</span></td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td>16,381-column sheet hanging pipeline</td>
+          <td><span class="badge" style="background:rgba(96,165,250,0.12);color:var(--blue)">NPI</span></td>
+          <td class="severity-low">Low</td>
+          <td>Added 500-col cap + API timeout protection</td>
+          <td><span class="badge badge-done">Fixed</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 6: TECH STACK                                          ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-stack">
+  <h1>Tech Stack</h1>
+  <p class="subtitle">Infrastructure powering the pricing diagnostic platform</p>
+
+  <div class="stack-layer">
+    <h3 style="color:var(--blue)">Data Pipeline</h3>
+    <div class="stack-items">
+      <span class="stack-chip">Python 3.11</span>
+      <span class="stack-chip">Pandas</span>
+      <span class="stack-chip">openpyxl</span>
+      <span class="stack-chip">pyxlsb</span>
+      <span class="stack-chip">Claude Sonnet API</span>
+      <span class="stack-chip">Anthropic SDK</span>
+      <span class="stack-chip">httpx</span>
+    </div>
+  </div>
+  <div class="stack-layer">
+    <h3 style="color:var(--purple)">Database</h3>
+    <div class="stack-items">
+      <span class="stack-chip">Supabase</span>
+      <span class="stack-chip">PostgreSQL</span>
+      <span class="stack-chip">Row Level Security</span>
+      <span class="stack-chip">Edge Functions</span>
+    </div>
+  </div>
+  <div class="stack-layer">
+    <h3 style="color:var(--pink)">Frontend</h3>
+    <div class="stack-items">
+      <span class="stack-chip">Next.js 14</span>
+      <span class="stack-chip">React</span>
+      <span class="stack-chip">Tailwind CSS</span>
+      <span class="stack-chip">Recharts</span>
+      <span class="stack-chip">Vercel</span>
+    </div>
+  </div>
+  <div class="stack-layer">
+    <h3 style="color:var(--green)">Architecture</h3>
+    <div class="stack-items">
+      <span class="stack-chip">Medallion Pattern (Bronze/Silver/Gold)</span>
+      <span class="stack-chip">Single Universal ETL Script</span>
+      <span class="stack-chip">Hybrid LLM + Rule Engine</span>
+      <span class="stack-chip">Client Approval Gate</span>
+      <span class="stack-chip">Reconciliation Audit Trail</span>
+      <span class="stack-chip">Client Context Intake (3-tier hybrid)</span>
+      <span class="stack-chip">Two-Frontend Architecture</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <h3 style="color:var(--text-dim);font-size:14px;margin-bottom:10px;">Key Scripts</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code class="mono" style="color:var(--blue);min-width:220px;">etl_npi_folder.py</code>
+        <span style="font-size:12px;color:var(--text-muted);">Folder-level universal LLM pipeline (production candidate)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code class="mono" style="color:var(--purple);min-width:220px;">etl_llm_pipeline.py</code>
+        <span style="font-size:12px;color:var(--text-muted);">Single-file LLM pipeline (to be merged into folder pipeline)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code class="mono" style="color:var(--purple);min-width:220px;">etl_cleaning_module.py</code>
+        <span style="font-size:12px;color:var(--text-muted);">Bronze → Silver cleaning (4-stage: dates, entity res, imputation, reconciliation)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code class="mono" style="color:var(--text-muted);min-width:220px;">etl_validation_module.py</code>
+        <span style="font-size:12px;color:var(--text-muted);">Silver → Gold validation (future)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 7: CLIENT CONTEXT INTAKE                               ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-context">
+  <h1>Client Context Intake System</h1>
+  <p class="subtitle">Capture business context before data processing — feeds smarter LLM decisions throughout the pipeline</p>
+
+  <!-- Why this matters -->
+  <div class="card" style="border-color:rgba(34,211,238,0.15);">
+    <h3 style="color:var(--cyan);font-size:14px;margin-bottom:10px;">Why Context Matters</h3>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">Without context, the LLM guesses that "Bookings Dataset 1" is transaction data, that "TCV" means total contract value, and that the business is B2B SaaS. With context provided upfront, classification accuracy improves dramatically, entity resolution gets smarter, and imputation uses real business logic instead of statistical inference.</p>
+  </div>
+
+  <!-- 3-Tier Architecture -->
+  <h2 style="margin-top:28px;margin-bottom:16px;">3-Tier Hybrid Approach</h2>
+
+  <div class="grid-3">
+    <!-- Tier 1 -->
+    <div class="card" style="border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.02);">
+      <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tier 1 — Always Required (Structured)</div>
+      <h3 style="color:var(--green);font-size:15px;">Core Business Fields</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">5–6 fields that apply to every pricing engagement. Non-negotiable — pipeline won't start without them.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);font-size:12px;">
+          <span style="color:var(--green);font-weight:600;">Company Name</span>
+          <span style="color:var(--text-muted);margin-left:6px;">+ Industry Vertical</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);font-size:12px;">
+          <span style="color:var(--green);font-weight:600;">Business Model</span>
+          <span style="color:var(--text-muted);margin-left:6px;">B2B / B2C / Marketplace / Hybrid</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);font-size:12px;">
+          <span style="color:var(--green);font-weight:600;">Revenue Range</span>
+          <span style="color:var(--text-muted);margin-left:6px;">Approximate annual revenue</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);font-size:12px;">
+          <span style="color:var(--green);font-weight:600;">Product/Service Type</span>
+          <span style="color:var(--text-muted);margin-left:6px;">Products, services, subscriptions, mix</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);font-size:12px;">
+          <span style="color:var(--green);font-weight:600;">Engagement Goal</span>
+          <span style="color:var(--text-muted);margin-left:6px;">One-liner on what they want</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2 -->
+    <div class="card" style="border-color:rgba(96,165,250,0.2);background:rgba(96,165,250,0.02);">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tier 2 — Smart Follow-ups (LLM-Generated)</div>
+      <h3 style="color:var(--blue);font-size:15px;">Dynamic Questions</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">3–5 questions generated by LLM based on Tier 1 answers. Tailored to the specific business type.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="padding:10px 12px;border-radius:6px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:3px;">If B2B SaaS →</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">"What are your contract structures?" "Average deal cycle?" "Renewal rate?"</div>
+        </div>
+        <div style="padding:10px 12px;border-radius:6px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:3px;">If Manufacturing →</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">"SKU count?" "Distribution channels?" "Raw material cost pass-through?"</div>
+        </div>
+        <div style="padding:10px 12px;border-radius:6px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:3px;">If Professional Services →</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">"Hourly vs project-based?" "Utilization targets?" "Rate card structure?"</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;"><span class="badge badge-llm">Claude Sonnet generates questions</span></div>
+    </div>
+
+    <!-- Tier 3 -->
+    <div class="card" style="border-color:rgba(244,114,182,0.2);background:rgba(244,114,182,0.02);">
+      <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tier 3 — Open Context (Optional)</div>
+      <h3 style="color:var(--pink);font-size:15px;">Free-Form + Deck Upload</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Prompted open-ended fields plus the ability to upload proposal decks for automatic context extraction.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);font-size:12px;">
+          <span style="color:var(--pink);font-weight:600;">Pricing Structure</span>
+          <span style="color:var(--text-muted);margin-left:6px;">"Describe in your own words..."</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);font-size:12px;">
+          <span style="color:var(--pink);font-weight:600;">Known Issues</span>
+          <span style="color:var(--text-muted);margin-left:6px;">"What's broken about pricing?"</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);font-size:12px;">
+          <span style="color:var(--pink);font-weight:600;">Data Quirks</span>
+          <span style="color:var(--text-muted);margin-left:6px;">"Anything weird we should know?"</span>
+        </div>
+        <div style="padding:8px 12px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);font-size:12px;">
+          <span style="color:var(--pink);font-weight:600;">Upload Deck/Doc</span>
+          <span style="color:var(--text-muted);margin-left:6px;">.pptx / .docx → LLM extracts context</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Paths -->
+  <h2 style="margin-top:28px;margin-bottom:16px;">Who Fills This In?</h2>
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(167,139,250,0.2);">
+      <h3 style="color:var(--purple);font-size:14px;margin-bottom:8px;">Path A: FintastIQ Team (Internal Console)</h3>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">Most common path. The team already has context from the sales process, case proposal, kickoff call. They fill in Tier 1 fields, or upload the proposal deck and let LLM extract everything automatically. They can also paste meeting notes or email threads.</p>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple);">Fill form manually</span>
+        <span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple);">Upload proposal .pptx</span>
+        <span class="badge" style="background:rgba(167,139,250,0.12);color:var(--purple);">Paste kickoff notes</span>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(244,114,182,0.2);">
+      <h3 style="color:var(--pink);font-size:14px;margin-bottom:8px;">Path B: Client Self-Service (Client Portal)</h3>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">Optional path. Some clients may want to fill in context themselves when uploading data. The portal shows Tier 1 fields and Tier 3 prompts. Tier 2 follow-ups appear dynamically after Tier 1 is complete.</p>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge" style="background:rgba(244,114,182,0.12);color:var(--pink);">Guided form</span>
+        <span class="badge" style="background:rgba(244,114,182,0.12);color:var(--pink);">Dynamic follow-ups</span>
+        <span class="badge" style="background:rgba(244,114,182,0.12);color:var(--pink);">Optional context</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validation -->
+  <div class="card" style="margin-top:16px;border-color:rgba(251,146,60,0.2);background:rgba(251,146,60,0.02);">
+    <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px;">Cross-Validation Step</h3>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">After context is captured AND data is uploaded, the LLM cross-checks context against actual data. If client says "B2C retail" but data has <code class="mono" style="color:var(--orange)">contract_value</code> and <code class="mono" style="color:var(--orange)">renewal_date</code> columns, the system flags the mismatch and asks for clarification. The validated context becomes <code class="mono" style="color:var(--orange)">client_context.json</code> — injected into every pipeline prompt.</p>
+    <div style="margin-top:10px;">
+      <span class="badge badge-llm">LLM validates context vs data</span>
+      <span class="badge" style="background:rgba(251,146,60,0.12);color:var(--orange);margin-left:6px;">Each field tracks provenance (client-entered / team-entered / extracted / inferred)</span>
+    </div>
+  </div>
+
+  <!-- Schema Preview -->
+  <div class="card" style="margin-top:16px;">
+    <h3 style="color:var(--text-dim);font-size:14px;margin-bottom:10px;">client_context.json Schema</h3>
+    <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);line-height:1.8;overflow-x:auto;">
+      {<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"company_name"</span>: <span style="color:var(--yellow);">"NPI"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"industry"</span>: <span style="color:var(--yellow);">"B2B SaaS / Consulting"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"business_model"</span>: <span style="color:var(--yellow);">"B2B"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"revenue_range"</span>: <span style="color:var(--yellow);">"$10M-$50M"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"product_type"</span>: <span style="color:var(--yellow);">"Services + Subscriptions"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"engagement_goal"</span>: <span style="color:var(--yellow);">"Pricing optimization, win rate analysis"</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"llm_follow_ups"</span>: { ... },<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"open_context"</span>: { ... },<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"provenance"</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--cyan);">"company_name"</span>: <span style="color:var(--yellow);">"team-entered"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--cyan);">"industry"</span>: <span style="color:var(--yellow);">"extracted-from-deck"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--cyan);">"revenue_range"</span>: <span style="color:var(--yellow);">"inferred-from-data"</span><br>
+      &nbsp;&nbsp;},<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"validated"</span>: <span style="color:var(--blue);">true</span>,<br>
+      &nbsp;&nbsp;<span style="color:var(--green);">"validation_flags"</span>: []<br>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  TAB 8: SYSTEM ARCHITECTURE                                 ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="page" id="page-system">
+  <h1>System Architecture</h1>
+  <p class="subtitle">End-to-end view — from client data upload through analysis delivery</p>
+
+  <!-- Legend -->
+  <div class="arch-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green);box-shadow:0 0 4px rgba(34,197,94,0.5)"></div> Live / Built</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue);box-shadow:0 0 4px rgba(96,165,250,0.5)"></div> In Progress</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted)"></div> Planned</div>
+    <div class="legend-item" style="margin-left:auto;"><span style="font-size:11px;color:var(--pink)">⚡ = LLM-powered</span></div>
+    <div class="legend-item"><span style="font-size:11px;color:var(--blue)">⚙️ = Rule-based</span></div>
+  </div>
+
+  <div class="arch-canvas">
+
+    <!-- ═══════ LAYER 1: SOURCE / INPUT ═══════ -->
+    <div class="arch-section blue-s">Source Layer — Client Data + Context Input</div>
+
+    <div class="arch-row">
+      <div class="arch-box blue wide">
+        <div class="box-status live"></div>
+        <div class="box-label">Client Upload</div>
+        <h4>Client Internal Data Folder</h4>
+        <div class="box-desc">Raw spreadsheets, CSVs, and binary files as received from client. Stored in project workspace folder.</div>
+        <div class="box-items">
+          <span class="box-item">.xlsx</span>
+          <span class="box-item">.xlsb</span>
+          <span class="box-item">.csv</span>
+          <span class="box-item">nested folders</span>
+        </div>
+        <div class="box-detail">Current: NPI (14 files), Gravitate (2 files) &bull; 3 more clients pending</div>
+      </div>
+      <div class="arch-box cyan" style="max-width:320px;">
+        <div class="box-status planned"></div>
+        <div class="box-label">New Component</div>
+        <h4>Client Context Intake</h4>
+        <div class="box-desc">3-tier hybrid: structured fields + LLM-generated follow-ups + open context. Can extract from uploaded proposal decks.</div>
+        <div class="box-items">
+          <span class="box-item">client_context.json</span>
+          <span class="box-item">deck extraction</span>
+          <span class="box-item">LLM follow-ups</span>
+        </div>
+        <div class="box-detail">Input: client self-serves, FintastIQ team fills, or LLM extracts from .pptx</div>
+      </div>
+    </div>
+
+    <!-- Arrow down -->
+    <div class="arch-arrow blue">
+      <div class="arrow-body">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">folder path</div>
+        <div class="arrow-head"></div>
+      </div>
+    </div>
+
+    <!-- ═══════ LAYER 2: ETL PIPELINE ═══════ -->
+    <div class="arch-section purple-s">Processing Layer — Universal ETL Pipeline (Python)</div>
+
+    <div class="arch-row">
+      <div class="arch-box purple wide" style="position:relative;">
+        <div class="box-status wip"></div>
+        <div class="box-label">etl_pipeline.py &bull; Single Universal Script</div>
+        <h4>LLM-Powered ETL Engine</h4>
+        <div class="box-desc">One script processes any client's data folder end-to-end. Hybrid architecture: LLM for judgment calls, rules for data transforms.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;">
+          <!-- Bronze -->
+          <div style="padding:12px;border-radius:8px;background:rgba(180,130,70,0.08);border:1px solid rgba(180,130,70,0.15);">
+            <div style="font-size:10px;font-weight:700;color:var(--bronze);text-transform:uppercase;letter-spacing:0.8px;">🥉 Ingestion → Bronze</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;">
+              Discover &bull; ⚡ Classify &bull; ⚡ Map &bull; ⚙️ Transform &bull; ⚡ Validate
+            </div>
+            <div style="margin-top:6px;"><span class="badge badge-done" style="font-size:10px;">Built</span></div>
+          </div>
+          <!-- Silver -->
+          <div style="padding:12px;border-radius:8px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);">
+            <div style="font-size:10px;font-weight:700;color:var(--silver);text-transform:uppercase;letter-spacing:0.8px;">🥈 Cleaning → Silver</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;">
+              ⚙️ Date fix &bull; ⚡ Entity resolve &bull; ⚡ Impute &bull; ⚙️ Reconcile
+            </div>
+            <div style="margin-top:6px;"><span class="badge badge-done" style="font-size:10px;">Built</span></div>
+          </div>
+          <!-- Gold -->
+          <div style="padding:12px;border-radius:8px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.15);">
+            <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.8px;">🥇 Validation → Gold</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;">
+              ⚙️ Apply feedback &bull; ⚙️ Derive metrics &bull; ⚡ Readiness check
+            </div>
+            <div style="margin-top:6px;"><span class="badge badge-pending" style="font-size:10px;">Planned</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Claude API -->
+      <div class="arch-box pink" style="max-width:200px;display:flex;flex-direction:column;justify-content:center;">
+        <div class="box-status live"></div>
+        <div class="box-label">External API</div>
+        <h4>Claude Sonnet API</h4>
+        <div class="box-desc">Anthropic API via httpx. Handles classification, mapping, entity resolution, validation.</div>
+        <div class="box-items">
+          <span class="box-item">anthropic SDK</span>
+          <span class="box-item">sonnet-4</span>
+        </div>
+        <div class="box-detail">~$0.87 per client run &bull; API key in env var (production)</div>
+      </div>
+    </div>
+
+    <!-- Client approval gate -->
+    <div class="arch-arrow orange">
+      <div class="arrow-body">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">🤝 Client Approval Gate — summary, assumptions, questions</div>
+        <div class="arrow-head"></div>
+      </div>
+    </div>
+
+    <!-- ═══════ LAYER 3: DATABASE ═══════ -->
+    <div class="arch-section green-s">Storage Layer — Supabase</div>
+
+    <div class="arch-row">
+      <div class="arch-box green wide">
+        <div class="box-status planned"></div>
+        <div class="box-label">Supabase &bull; PostgreSQL</div>
+        <h4>Database — Gold Layer Tables</h4>
+        <div class="box-desc">Client-approved, analysis-ready data loaded via SQL bulk insert. Each client gets isolated schema with Row Level Security.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;">
+          <div style="padding:8px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);">
+            <div style="font-size:10px;font-weight:600;color:var(--green);">Fact Tables</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">transaction_fact<br>monthly_financials</div>
+          </div>
+          <div style="padding:8px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);">
+            <div style="font-size:10px;font-weight:600;color:var(--green);">Dimensions</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">customer_dim<br>product_dim<br>sales_rep_dim</div>
+          </div>
+          <div style="padding:8px;border-radius:6px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.1);">
+            <div style="font-size:10px;font-weight:600;color:var(--green);">Supporting</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">contract<br>deal_opportunity<br>pricing_metrics</div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-box green" style="max-width:220px;">
+        <div class="box-status planned"></div>
+        <div class="box-label">Supabase Services</div>
+        <h4>Platform Features</h4>
+        <div class="box-items" style="margin-top:0;">
+          <span class="box-item">Auth (client login)</span>
+          <span class="box-item">RLS policies</span>
+          <span class="box-item">Storage (file uploads)</span>
+          <span class="box-item">Edge Functions</span>
+          <span class="box-item">Realtime (progress)</span>
+        </div>
+        <div class="box-detail">Multi-tenant: each client sees only their data via RLS</div>
+      </div>
+    </div>
+
+    <!-- Arrow down -->
+    <div class="arch-arrow green">
+      <div class="arrow-body">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Supabase JS Client &bull; REST API &bull; Realtime subscriptions</div>
+        <div class="arrow-head"></div>
+      </div>
+    </div>
+
+    <!-- ═══════ LAYER 4: FRONTEND ═══════ -->
+    <div class="arch-section pink-s">Presentation Layer — Frontend Application</div>
+
+    <div class="arch-row">
+      <!-- Frontend A -->
+      <div class="arch-box purple wide">
+        <div class="box-status planned"></div>
+        <div class="box-label">Frontend A &bull; Internal Console &bull; FintastIQ Team Only</div>
+        <h4>Internal Console</h4>
+        <div class="box-desc">Power-user tool for the FintastIQ team. Upload data, fill/extract context, run pipeline, review cleaning, manage client Q&A, approve Silver → Gold.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;">
+          <div style="padding:10px;border-radius:6px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">📁</div>
+            <div style="font-size:10px;font-weight:600;color:var(--purple);">Data Upload</div>
+            <div style="font-size:10px;color:var(--text-muted);">Upload client folders, kick off pipeline</div>
+          </div>
+          <div style="padding:10px;border-radius:6px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">📝</div>
+            <div style="font-size:10px;font-weight:600;color:var(--purple);">Context Intake</div>
+            <div style="font-size:10px;color:var(--text-muted);">Fill context or upload deck for LLM extraction</div>
+          </div>
+          <div style="padding:10px;border-radius:6px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">⚙️</div>
+            <div style="font-size:10px;font-weight:600;color:var(--purple);">Pipeline Mgmt</div>
+            <div style="font-size:10px;color:var(--text-muted);">Review cleaning, approve, manage Q&A</div>
+          </div>
+        </div>
+        <div class="box-detail">Access: FintastIQ team only &bull; Less polished, more functional</div>
+      </div>
+      <!-- Frontend B -->
+      <div class="arch-box pink wide">
+        <div class="box-status planned"></div>
+        <div class="box-label">Frontend B &bull; Client Insights Portal &bull; Clients Access This</div>
+        <h4>Client Insights Portal</h4>
+        <div class="box-desc">Clean, branded read-mostly experience. Clients see analyses, answer clarification questions, approve assumptions, download reports.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;">
+          <div style="padding:10px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">📊</div>
+            <div style="font-size:10px;font-weight:600;color:var(--pink);">Analysis Views</div>
+            <div style="font-size:10px;color:var(--text-muted);">20 diagnostic charts & drill-downs</div>
+          </div>
+          <div style="padding:10px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">✅</div>
+            <div style="font-size:10px;font-weight:600;color:var(--pink);">Approval UI</div>
+            <div style="font-size:10px;color:var(--text-muted);">Answer questions, confirm assumptions</div>
+          </div>
+          <div style="padding:10px;border-radius:6px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.1);text-align:center;">
+            <div style="font-size:18px;margin-bottom:4px;">📋</div>
+            <div style="font-size:10px;font-weight:600;color:var(--pink);">Reports</div>
+            <div style="font-size:10px;color:var(--text-muted);">Export PDF/PPTX, download data</div>
+          </div>
+        </div>
+        <div class="box-detail">Access: Clients only see their own data via RLS &bull; Polished, branded</div>
+      </div>
+    </div>
+
+    <!-- ═══════ LAYER 5: DEPLOYMENT & DEVOPS ═══════ -->
+    <div class="arch-section" style="color:var(--cyan);background:rgba(34,211,238,0.05);">
+      <span>DevOps Layer — GitHub + Vercel + Supabase</span>
+      <span style="flex:1;height:1px;background:rgba(34,211,238,0.15);"></span>
+    </div>
+
+    <div class="arch-row">
+      <!-- GitHub -->
+      <div class="arch-box cyan" style="flex:1;">
+        <div class="box-status planned"></div>
+        <div class="box-label">Source Control</div>
+        <h4>GitHub Repository</h4>
+        <div class="box-desc">Monorepo structure containing ETL pipeline, frontend app, and infrastructure config.</div>
+        <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);line-height:1.8;background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;">
+          <span style="color:var(--cyan);">fintastiq/</span><br>
+          ├── <span style="color:var(--purple);">pipeline/</span><br>
+          │ &nbsp; ├── etl_pipeline.py<br>
+          │ &nbsp; ├── cleaning_module.py<br>
+          │ &nbsp; ├── validation_module.py<br>
+          │ &nbsp; ├── context_intake.py<br>
+          │ &nbsp; └── requirements.txt<br>
+          ├── <span style="color:var(--purple);">console/</span> <span style="color:var(--text-muted);font-size:10px;">(Frontend A — internal)</span><br>
+          │ &nbsp; ├── src/<br>
+          │ &nbsp; └── next.config.js<br>
+          ├── <span style="color:var(--pink);">portal/</span> <span style="color:var(--text-muted);font-size:10px;">(Frontend B — client-facing)</span><br>
+          │ &nbsp; ├── src/<br>
+          │ &nbsp; └── next.config.js<br>
+          ├── <span style="color:var(--green);">supabase/</span><br>
+          │ &nbsp; ├── migrations/<br>
+          │ &nbsp; ├── functions/<br>
+          │ &nbsp; └── seed.sql<br>
+          ├── .github/workflows/<br>
+          └── .env.example
+        </div>
+      </div>
+
+      <!-- Vercel -->
+      <div class="arch-box orange" style="flex:1;">
+        <div class="box-status planned"></div>
+        <div class="box-label">Hosting & CI/CD</div>
+        <h4>Vercel</h4>
+        <div class="box-desc">Frontend deployment with automatic preview deployments on every PR. Connected to GitHub for CI/CD.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🔄</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--orange);">Git Push → Auto Deploy</div>
+              <div style="font-size:10px;color:var(--text-muted);">Push to main = production deploy</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🔍</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--orange);">PR → Preview Deploy</div>
+              <div style="font-size:10px;color:var(--text-muted);">Every PR gets a live preview URL</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🔐</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--orange);">Env Variables</div>
+              <div style="font-size:10px;color:var(--text-muted);">SUPABASE_URL, ANON_KEY, API keys</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🌐</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--orange);">Custom Domain</div>
+              <div style="font-size:10px;color:var(--text-muted);">app.fintastiq.com (future)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supabase Platform -->
+      <div class="arch-box green" style="flex:1;">
+        <div class="box-status planned"></div>
+        <div class="box-label">Backend Platform</div>
+        <h4>Supabase Cloud</h4>
+        <div class="box-desc">Managed PostgreSQL with built-in auth, storage, and edge functions. No separate backend server needed.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🗄️</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--green);">Database</div>
+              <div style="font-size:10px;color:var(--text-muted);">Gold tables + client schemas</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🔑</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--green);">Auth</div>
+              <div style="font-size:10px;color:var(--text-muted);">Client login, team access</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">📦</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--green);">Storage</div>
+              <div style="font-size:10px;color:var(--text-muted);">Raw file uploads, exports</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">⚡</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--green);">Edge Functions</div>
+              <div style="font-size:10px;color:var(--text-muted);">Trigger pipeline, webhooks</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ DATA FLOW SUMMARY ═══════ -->
+    <div class="card" style="margin-top:24px;border-color:rgba(34,211,238,0.15);">
+      <h3 style="color:var(--cyan);font-size:14px;margin-bottom:14px;">End-to-End Data Flow</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.2;color:var(--text-muted);overflow-x:auto;white-space:nowrap;">
+        <span style="color:var(--cyan);">Context Intake</span>
+        <span style="color:var(--border-light);"> ─┐ </span><br>
+        <span style="color:var(--blue);">Client Folder</span>
+        <span style="color:var(--border-light);"> ─┴── </span>
+        <span style="color:var(--purple);">etl_pipeline.py</span>
+        <span style="color:var(--border-light);"> ─┬── </span>
+        <span style="color:var(--bronze);">Bronze</span>
+        <span style="color:var(--border-light);"> ── </span>
+        <span style="color:var(--silver);">Silver</span>
+        <span style="color:var(--border-light);"> ── </span>
+        <span style="color:var(--orange);">🤝 Approval</span>
+        <span style="color:var(--border-light);"> ── </span>
+        <span style="color:var(--gold);">Gold</span>
+        <span style="color:var(--border-light);"> ── </span>
+        <span style="color:var(--green);">Supabase</span>
+        <span style="color:var(--border-light);"> ─┬── </span>
+        <span style="color:var(--purple);">Internal Console (A)</span>
+        <br>
+        <span style="color:var(--border-light);padding-left:192px;"> └── </span>
+        <span style="color:var(--pink);">Claude API</span>
+        <span style="color:var(--border-light);padding-left:260px;"> └── </span>
+        <span style="color:var(--pink);">Client Portal (B)</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+        <div style="padding:10px;border-radius:8px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px;">GitHub Manages</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Source code version control, PR reviews, CI/CD triggers, issue tracking, migration history</div>
+        </div>
+        <div style="padding:10px;border-radius:8px;background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--orange);margin-bottom:4px;">Vercel Manages</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Frontend builds, preview deploys, production hosting, edge CDN, custom domain, SSL</div>
+        </div>
+        <div style="padding:10px;border-radius:8px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.1);">
+          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px;">Supabase Manages</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Database, auth, file storage, RLS, edge functions, realtime, backups, multi-tenant isolation</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /arch-canvas -->
+</div>
+
+</div><!-- /content -->
+
+<!-- ════════════ TAB SWITCHING JS ════════════ -->
+<script>
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

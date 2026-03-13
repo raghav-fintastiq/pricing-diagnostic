@@ -1,0 +1,40 @@
+# ─── Client Data (NEVER commit — sensitive pricing data) ─────────────────────
+2. Client Internal Data/
+
+# ─── Cleaned Output (large Excel files, generated artifacts) ─────────────────
+4. Cleaned Output/
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+node_modules/
+5. fintastiq-frontend/node_modules/
+dist/
+.vite/
+*.local
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+venv/
+
+# ─── OS / Editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+.~lock.*
+*.timestamp-*.mjs
+
+# ─── Archived / deprecated scripts (contain old hardcoded keys) ──────────────
+_archive/
+
+# ─── Claude / Cowork session files ───────────────────────────────────────────
+.claude/
+
+# ─── Secrets ─────────────────────────────────────────────────────────────────
+*.env
+secrets.json
+message_draft.md
