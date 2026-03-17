@@ -1109,6 +1109,49 @@ function LoadingScreen() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   VIEW WRAPPERS — new analyses wired to sidebar IDs
+   ═══════════════════════════════════════════════════════════════ */
+function PvmView() {
+  const data = useData();
+  const pvm = data?.pvm || [];
+  if (!pvm.length) return <div style={{padding:32,color:"#888",textAlign:"center"}}>No PVM data available</div>;
+  return (
+    <ChartCard title="Price-Volume-Mix Decomposition" sub="Revenue change split into Price, Volume and Mix effects">
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={pvm}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis dataKey="period" tick={{ fill:"#888", fontSize:11 }} />
+          <YAxis tick={{ fill:"#888", fontSize:11 }} />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend wrapperStyle={{ fontSize:11, color:"#f0f0f2" }} />
+          <Bar dataKey="price"  name="Price Effect"  fill="#c5d44b" radius={[3,3,0,0]} />
+          <Bar dataKey="volume" name="Volume Effect" fill="#3e8c7f" radius={[3,3,0,0]} />
+          <Bar dataKey="mix"    name="Mix Effect"    fill="#7ea05e" radius={[3,3,0,0]} />
+          <Bar dataKey="total"  name="Net Change"    fill="#e8c56c" radius={[3,3,0,0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  );
+}
+// Simple wrappers — render the card components with data from context
+function wrapCard(Component) {
+  return function WrappedView() {
+    const data = useData();
+    return <div style={{ padding: 4 }}><Component data={data} /></div>;
+  };
+}
+const WinLossView      = wrapCard(WinLossCard);
+const DealVelocityView = wrapCard(DealVelocityCard);
+const DiscountGovView  = wrapCard(DiscountGovCard);
+const PriceBandView    = wrapCard(PriceBandCard);
+const RebateView       = wrapCard(RebateCard);
+const CompetitiveView  = wrapCard(CompetitiveCard);
+const DealSizeView     = wrapCard(DealSizeCard);
+const RepPerfView      = wrapCard(RepPerfCard);
+const CostToServeView  = wrapCard(CostToServeCard);
+const CohortView       = wrapCard(CohortRevenueCard);
+
+/* ═══════════════════════════════════════════════════════════════
    MAIN EXPORT
    ═══════════════════════════════════════════════════════════════ */
 export default function Dashboard({ clientId, clientName, userRole, userName, onBack, onLogout }) {
@@ -1129,11 +1172,23 @@ export default function Dashboard({ clientId, clientName, userRole, userName, on
   const viewMap = {
     dashboard:    { title: "Executive Dashboard",    component: <ExecutiveDashboard /> },
     "01":         { title: "Pocket Price Waterfall", component: <PocketPriceWaterfallView /> },
+    "02":         { title: "Deal Velocity",          component: <DealVelocityView /> },
+    "03":         { title: "Price-Volume-Mix",       component: <PvmView /> },
     "04":         { title: "Customer Profitability", component: <CustomerProfitabilityView /> },
+    "05":         { title: "Discount Effectiveness", component: <DiscountGovView /> },
+    "06":         { title: "Price Bands",            component: <PriceBandView /> },
+    "07":         { title: "Contract Leakage",       component: <RebateView /> },
     "08":         { title: "Deal Scorecard",         component: <DealScorecardView /> },
+    "09":         { title: "Competitive Position",   component: <CompetitiveView /> },
+    "10":         { title: "Price Corridor",         component: <DealSizeView /> },
     "11":         { title: "SKU Pareto",             component: <SkuParetoView /> },
     "13":         { title: "Churn Risk",             component: <ChurnRiskView /> },
     "14":         { title: "Geographic Pricing",     component: <GeoPricingView /> },
+    "15":         { title: "Sales Rep Performance",  component: <RepPerfView /> },
+    "17":         { title: "Cost-to-Serve",          component: <CostToServeView /> },
+    "18":         { title: "Rebate Optimization",    component: <RebateView /> },
+    "19":         { title: "Cohort Revenue",         component: <CohortView /> },
+    "20":         { title: "Win/Loss Analysis",      component: <WinLossView /> },
     opportunities:{ title: "Opportunities",          component: <OpportunitiesView /> },
   };
 
