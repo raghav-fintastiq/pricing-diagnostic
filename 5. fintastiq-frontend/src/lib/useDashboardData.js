@@ -79,6 +79,8 @@ export function useDashboardData(clientId) {
           compIntelRes,
           rebateRes,
           ctsRes,
+          newProductPricingRes,
+          promotionRoiRes,
         ] = await Promise.all([
           supabase.from("vw_executive_summary").select("*").eq("client_id", clientId).single(),
           supabase.from("vw_waterfall").select("*").eq("client_id", clientId).single(),
@@ -100,6 +102,8 @@ export function useDashboardData(clientId) {
           supabase.from("vw_competitive_intel").select("*").eq("client_id", clientId),
           supabase.from("vw_rebate_analysis").select("*").eq("client_id", clientId),
           supabase.from("vw_cost_to_serve").select("*").eq("client_id", clientId),
+          supabase.from("vw_new_product_pricing").select("*").eq("client_id", clientId).order("launch_date"),
+          supabase.from("vw_promotion_roi").select("*").eq("client_id", clientId).order("promotion_start_date"),
         ]);
 
         const raw = summaryRes.data || {};
@@ -245,6 +249,38 @@ export function useDashboardData(clientId) {
             salesCoverageCost: n(r.sales_coverage_cost),
             totalCts: n(r.total_cost_to_serve),
             orderFrequency: +r.order_frequency, avgOrderSize: n(r.avg_order_size),
+          })),
+          newProductPricing: (newProductPricingRes.data || []).map(r => ({
+            productSku: r.product_sku, productName: r.product_name,
+            productCategory: r.product_category, productFamily: r.product_family,
+            productStatus: r.product_status, launchDate: r.launch_date,
+            currentListPrice: n(r.current_list_price), standardCost: n(r.standard_cost),
+            grossMarginPct: n(r.gross_margin_pct), valueMetric: r.value_metric,
+            competitorEquivalent: r.competitor_equivalent,
+            lastPriceChangeDate: r.last_price_change_date,
+            previousListPrice: n(r.previous_list_price), lastChangePct: n(r.last_change_pct),
+            changeReason: r.change_reason,
+            avgCompetitorPrice: r.avg_competitor_price ? n(r.avg_competitor_price) : null,
+            avgFeatureScore: r.avg_feature_score ? n(r.avg_feature_score) : null,
+            competitorCount: r.competitor_count ? +r.competitor_count : 0,
+            competitors: r.competitors,
+            priceVsMarketPct: r.price_vs_market_pct != null ? n(r.price_vs_market_pct) : null,
+            suggestedPrice: n(r.suggested_price),
+            marketPosition: r.market_position,
+          })),
+          promotionRoi: (promotionRoiRes.data || []).map(r => ({
+            promotionId: r.promotion_id, productSku: r.product_sku,
+            promotionType: r.promotion_type,
+            startDate: r.promotion_start_date, endDate: r.promotion_end_date,
+            durationDays: +r.promo_duration_days,
+            promotionalPrice: n(r.promotional_price), regularPrice: n(r.regular_price),
+            discountDepthPct: n(r.discount_depth_pct),
+            promotionalCost: n(r.promotional_cost),
+            targetSegment: r.target_segment, promotionChannel: r.promotion_channel,
+            promoTxnCount: +r.promo_txn_count,
+            promoRevenue: n(r.promo_revenue), baselineRevenue: n(r.baseline_revenue),
+            revenueLift: n(r.revenue_lift), roiPct: r.roi_pct != null ? n(r.roi_pct) : null,
+            performanceBand: r.performance_band,
           })),
         });
       } catch (err) {

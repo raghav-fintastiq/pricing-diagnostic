@@ -1087,6 +1087,185 @@ function FilterBar() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   12. NEW PRODUCT PRICING CARD
+   ═══════════════════════════════════════════════════════════════ */
+function NewProductPricingCard({ data }) {
+  if (!data?.newProductPricing?.length) return null;
+  const products = data.newProductPricing;
+
+  const chartData = products.map(p => ({
+    name: p.productName.replace("AI Insights", "AI").replace("Workflow Automation", "Workflow"),
+    "Our Price":       +p.currentListPrice,
+    "Competitor Avg":  p.avgCompetitorPrice ? +p.avgCompetitorPrice : null,
+    "Suggested":       p.suggestedPrice && p.suggestedPrice !== p.currentListPrice ? +p.suggestedPrice : null,
+  }));
+
+  const positionColor = (pos) =>
+    pos === "Premium" ? "#c5d44b" : pos === "Underpriced" ? "#ef5350" : "#3e8c7f";
+  const statusColor = (s) =>
+    s === "Beta" ? "#e8c56c" : s === "Pipeline" ? "#3b5068" : "#3e8c7f";
+
+  return (
+    <ChartCard title="New Product Pricing" sub="Beta & pipeline SKUs — price positioning vs market">
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={chartData} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
+          <XAxis type="number" tick={{ fill: "#888", fontSize: 10 }}
+            tickFormatter={v => `$${v}`} />
+          <YAxis type="category" dataKey="name" tick={{ fill: "#888", fontSize: 10 }} width={90} />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend wrapperStyle={{ fontSize: 11, color: "#f0f0f2" }} />
+          <Bar dataKey="Our Price"      fill="#c5d44b" radius={[0,4,4,0]} barSize={14} />
+          <Bar dataKey="Competitor Avg" fill="#3b5068" radius={[0,4,4,0]} barSize={14} />
+          <Bar dataKey="Suggested"      fill="#3e8c7f" radius={[0,4,4,0]} barSize={14} />
+        </BarChart>
+      </ResponsiveContainer>
+
+      <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 16 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #333" }}>
+            <th style={{ textAlign: "left",  padding: "6px 8px", color: "#888" }}>Product</th>
+            <th style={{ textAlign: "center",padding: "6px 8px", color: "#888" }}>Status</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>List Price</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>Margin</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>vs Market</th>
+            <th style={{ textAlign: "center",padding: "6px 8px", color: "#888" }}>Position</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(p => (
+            <tr key={p.productSku} style={{ borderBottom: "1px solid #222" }}>
+              <td style={{ padding: "6px 8px", color: "#f0f0f2" }}>
+                <div style={{ fontWeight: 600 }}>{p.productName}</div>
+                <div style={{ color: "#555", fontSize: 10 }}>{p.productSku}</div>
+              </td>
+              <td style={{ textAlign: "center", padding: "6px 8px" }}>
+                <span style={{
+                  background: statusColor(p.productStatus) + "33",
+                  color: statusColor(p.productStatus),
+                  padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700,
+                }}>{p.productStatus}</span>
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px", color: "#c5d44b" }}>
+                ${(+p.currentListPrice).toLocaleString()}
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px", color: "#3e8c7f" }}>
+                {p.grossMarginPct}%
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px",
+                color: +p.priceVsMarketPct > 5 ? "#c5d44b" : +p.priceVsMarketPct < -5 ? "#ef5350" : "#888" }}>
+                {p.priceVsMarketPct != null ? `${+p.priceVsMarketPct > 0 ? "+" : ""}${p.priceVsMarketPct}%` : "—"}
+              </td>
+              <td style={{ textAlign: "center", padding: "6px 8px" }}>
+                <span style={{
+                  background: positionColor(p.marketPosition) + "33",
+                  color: positionColor(p.marketPosition),
+                  padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700,
+                }}>{p.marketPosition}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ChartCard>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   16. PROMOTION ROI CARD
+   ═══════════════════════════════════════════════════════════════ */
+function PromotionRoiCard({ data }) {
+  if (!data?.promotionRoi?.length) return null;
+  const promos = data.promotionRoi.filter(p => p.promoRevenue > 0);
+
+  const chartData = promos.map(p => ({
+    name: p.promotionType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()).substring(0, 16),
+    "Promo Rev":    Math.round(p.promoRevenue / 1000),
+    "Baseline Rev": Math.round(p.baselineRevenue / 1000),
+  }));
+
+  const perfColor = (band) =>
+    band === "High Performer" ? "#c5d44b" : band === "Positive" ? "#3e8c7f" : "#ef5350";
+
+  const totalLift = promos.reduce((s, p) => s + p.revenueLift, 0);
+  const totalCost = promos.reduce((s, p) => s + p.promotionalCost, 0);
+  const overallRoi = totalCost > 0 ? Math.round((totalLift - totalCost) / totalCost * 100) : null;
+  const winners = promos.filter(p => p.performanceBand !== "Below Baseline").length;
+
+  return (
+    <ChartCard title="Promotion ROI" sub="Revenue lift vs baseline and cost of promotion">
+      <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+        {[
+          { label: "Total Lift", value: fmt(Math.abs(totalLift)), color: totalLift > 0 ? "#c5d44b" : "#ef5350" },
+          { label: "Total Promo Cost", value: fmt(totalCost), color: "#888" },
+          { label: "Overall ROI", value: overallRoi != null ? `${overallRoi}%` : "—",
+            color: overallRoi > 0 ? "#3e8c7f" : "#ef5350" },
+          { label: "Winners", value: `${winners} / ${promos.length}`, color: "#e8c56c" },
+        ].map(m => (
+          <div key={m.label} style={{ flex: 1, background: "#252528", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 10, color: "#888", marginBottom: 4 }}>{m.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 9 }} />
+          <YAxis tick={{ fill: "#888", fontSize: 10 }} tickFormatter={v => `$${v}K`} />
+          <Tooltip content={<CustomTooltip />} formatter={v => `$${v}K`} />
+          <Legend wrapperStyle={{ fontSize: 11, color: "#f0f0f2" }} />
+          <Bar dataKey="Promo Rev"    fill="#c5d44b" radius={[4,4,0,0]} />
+          <Bar dataKey="Baseline Rev" fill="#3b5068" radius={[4,4,0,0]} />
+        </BarChart>
+      </ResponsiveContainer>
+
+      <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 16 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #333" }}>
+            <th style={{ textAlign: "left",  padding: "6px 8px", color: "#888" }}>Promotion</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>SKU</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>Discount</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>Lift</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>ROI</th>
+            <th style={{ textAlign: "center",padding: "6px 8px", color: "#888" }}>Band</th>
+          </tr>
+        </thead>
+        <tbody>
+          {promos.map(p => (
+            <tr key={p.promotionId} style={{ borderBottom: "1px solid #222" }}>
+              <td style={{ padding: "6px 8px", color: "#f0f0f2" }}>
+                {p.promotionType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px", color: "#888" }}>{p.productSku}</td>
+              <td style={{ textAlign: "right", padding: "6px 8px", color: "#e8c56c" }}>
+                {p.discountDepthPct}%
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px",
+                color: p.revenueLift > 0 ? "#3e8c7f" : "#ef5350" }}>
+                {p.revenueLift >= 0 ? "+" : ""}{fmt(Math.abs(p.revenueLift))}
+              </td>
+              <td style={{ textAlign: "right", padding: "6px 8px",
+                color: p.roiPct > 0 ? "#c5d44b" : "#ef5350" }}>
+                {p.roiPct != null ? `${p.roiPct}%` : "—"}
+              </td>
+              <td style={{ textAlign: "center", padding: "6px 8px" }}>
+                <span style={{
+                  background: perfColor(p.performanceBand) + "33",
+                  color: perfColor(p.performanceBand),
+                  padding: "2px 6px", borderRadius: 99, fontSize: 9, fontWeight: 700,
+                }}>{p.performanceBand}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ChartCard>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    LOADING / ERROR SCREENS
    ═══════════════════════════════════════════════════════════════ */
 function LoadingScreen() {
@@ -1140,16 +1319,18 @@ function wrapCard(Component) {
     return <div style={{ padding: 4 }}><Component data={data} /></div>;
   };
 }
-const WinLossView      = wrapCard(WinLossCard);
-const DealVelocityView = wrapCard(DealVelocityCard);
-const DiscountGovView  = wrapCard(DiscountGovCard);
-const PriceBandView    = wrapCard(PriceBandCard);
-const RebateView       = wrapCard(RebateCard);
-const CompetitiveView  = wrapCard(CompetitiveCard);
-const DealSizeView     = wrapCard(DealSizeCard);
-const RepPerfView      = wrapCard(RepPerfCard);
-const CostToServeView  = wrapCard(CostToServeCard);
-const CohortView       = wrapCard(CohortRevenueCard);
+const WinLossView         = wrapCard(WinLossCard);
+const DealVelocityView    = wrapCard(DealVelocityCard);
+const DiscountGovView     = wrapCard(DiscountGovCard);
+const PriceBandView       = wrapCard(PriceBandCard);
+const RebateView          = wrapCard(RebateCard);
+const CompetitiveView     = wrapCard(CompetitiveCard);
+const DealSizeView        = wrapCard(DealSizeCard);
+const RepPerfView         = wrapCard(RepPerfCard);
+const CostToServeView     = wrapCard(CostToServeCard);
+const CohortView          = wrapCard(CohortRevenueCard);
+const NewProductPricingView = wrapCard(NewProductPricingCard);
+const PromotionRoiView    = wrapCard(PromotionRoiCard);
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN EXPORT
@@ -1182,9 +1363,11 @@ export default function Dashboard({ clientId, clientName, userRole, userName, on
     "09":         { title: "Competitive Position",   component: <CompetitiveView /> },
     "10":         { title: "Price Corridor",         component: <DealSizeView /> },
     "11":         { title: "SKU Pareto",             component: <SkuParetoView /> },
+    "12":         { title: "New Product Pricing",    component: <NewProductPricingView /> },
     "13":         { title: "Churn Risk",             component: <ChurnRiskView /> },
     "14":         { title: "Geographic Pricing",     component: <GeoPricingView /> },
     "15":         { title: "Sales Rep Performance",  component: <RepPerfView /> },
+    "16":         { title: "Promotion ROI",           component: <PromotionRoiView /> },
     "17":         { title: "Cost-to-Serve",          component: <CostToServeView /> },
     "18":         { title: "Rebate Optimization",    component: <RebateView /> },
     "19":         { title: "Cohort Revenue",         component: <CohortView /> },
