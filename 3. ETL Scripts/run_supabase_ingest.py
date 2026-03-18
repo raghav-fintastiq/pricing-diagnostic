@@ -129,12 +129,12 @@ CANONICAL_TABLES = {
 # Column name aliases — maps common bronze column names → canonical column names
 COLUMN_ALIASES = {
     "customer_id": ["cust_id", "account_id", "buyer_id", "client_customer_id", "id"],
-    "customer_name": ["account_name", "company_name", "buyer_name", "customer"],
+    "customer_name": ["account_name", "company_name", "buyer_name", "customer", "client_name"],
     "product_sku": ["sku", "product_code", "item_code", "item_id", "product_id"],
     "product_name": ["item_name", "product_description", "product_desc", "name"],
     "transaction_id": ["txn_id", "invoice_id", "order_id", "line_id", "id"],
     "transaction_date": ["invoice_date", "order_date", "txn_date", "date", "sale_date"],
-    "revenue": ["amount", "net_revenue", "sales_amount", "invoice_amount"],
+    "revenue": ["amount", "net_revenue", "sales_amount", "invoice_amount", "net_amount", "total_amount"],
     "list_price": ["msrp", "standard_price", "base_price", "price"],
     "invoice_price": ["net_price", "final_price", "billed_price", "selling_price"],
     "discount_pct": ["discount", "discount_percent", "disc_pct", "rebate_pct"],
@@ -496,6 +496,25 @@ def transform_to_canonical(
 
     # Rename columns
     df = df.rename(columns=col_map)
+
+    # ── Auto-derive customer_id BEFORE canonical filter (name col may get dropped) ──
+    # Real client data often has customer names but not IDs; generate stable slug-IDs.
+    if "customer_id" in meta.get("required", []):
+        has_cid = "customer_id" in df.columns and df["customer_id"].notna().any()
+        if not has_cid:
+            name_col = next(
+                (c for c in df.columns if c in ("customer_name", "account_name", "company_name", "customer")),
+                None
+            )
+            if name_col:
+                def _cust_id_from_name(name):
+                    if pd.isna(name) or not str(name).strip():
+                        return None
+                    slug = re.sub(r"[^a-z0-9]+", "-", str(name).lower()).strip("-")[:40]
+                    return f"{client_id[:6]}-{slug}"
+                df["customer_id"] = df[name_col].map(_cust_id_from_name)
+                print(f"    Derived customer_id from '{name_col}' for {df['customer_id'].notna().sum()} rows")
+
     # Keep only canonical columns
     all_canonical = [c for c in df.columns if c in _get_all_canonical_cols(canonical)]
     df = df[all_canonical].copy() if all_canonical else df.copy()
